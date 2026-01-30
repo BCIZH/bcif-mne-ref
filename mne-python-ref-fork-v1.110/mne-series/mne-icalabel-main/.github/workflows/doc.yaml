@@ -1,0 +1,61 @@
+name: doc
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: ./main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.13
+      - name: Install linux dependencies
+        run: |
+          sudo apt update
+          sudo apt install optipng
+      - uses: pyvista/setup-headless-display-action@main
+        with:
+          qt: true
+      - name: Install package
+        run: |
+          python -m pip install --progress-bar off --upgrade pip setuptools
+          python -m pip install --progress-bar off main/.[doc]
+      - run: mne_icalabel-sys_info --developer
+      - run: sphinx-build ./main/doc ./doc-build/dev -W --keep-going
+      - run: sudo rm -R ./doc-build/dev/.doctrees
+      - uses: actions/upload-artifact@v6
+        with:
+          name: doc-dev
+          path: ./doc-build/dev
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: doc-dev
+          path: ./doc-dev
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ./doc-dev
+          target-folder: ./dev
+          git-config-name: 'github-actions[bot]'
+          git-config-email: 'github-actions[bot]@users.noreply.github.com'
+          single-commit: true
+          force: true

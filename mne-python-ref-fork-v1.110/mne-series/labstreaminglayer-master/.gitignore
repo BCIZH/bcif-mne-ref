@@ -1,0 +1,37 @@
+/install
+/out
+
+# any autosave from emacs
+*~
+
+## Cmake.gitignore
+
+CMakeCache.txt
+CMakeFiles
+CMakeSettings.json
+CMakeLists.txt.user
+
+# Distribution / packaging
+/build*/
+
+# Sphinx documentation
+docs/_build/
+
+## VisualStudio.gitignore:
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Visual Studo 2015 cache/options directory
+.vs/
+
+# stupid ds_store:
+.DS_Store
+
+# JetBrains
+.idea
+cmake-build*/

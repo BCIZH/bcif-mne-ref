@@ -1,0 +1,43 @@
+name: autofix.ci
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  stubs:
+    if: ${{ github.repository == 'mne-tools/mne-lsl' }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: astral-sh/setup-uv@v7
+        with:
+          activate-environment: true
+          python-version: 3.13
+      - run: uv sync -q --locked --no-default-groups --group stubs
+      - run: mne-lsl sys-info --developer
+      - run: python tools/stubgen.py
+      - uses: autofix-ci/action@v1.3.2
+        if: ${{ github.event_name == 'pull_request' }}
+      - name: Push stub files
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if [ -n "$(git status --porcelain)" ]; then
+            branch_name="update-stub-files-$(date +'%Y%m%d-%H%M%S')"
+            git checkout -b "$branch_name"
+            git add src/mne_lsl/\*.pyi
+            git commit -m "deploy stub files [ci skip]"
+            git push --set-upstream origin "$branch_name"
+            gh pr create --title "Update stub files" --body "Auto-generated PR for updating stub files." --base main
+          fi

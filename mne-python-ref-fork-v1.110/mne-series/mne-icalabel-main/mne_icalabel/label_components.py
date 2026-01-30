@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import numpy as np
+from mne.utils import _validate_type
+from mne.utils.check import _check_option
+
+from .config import ICALABEL_METHODS, ICALABEL_METHODS_NUMERICAL_TO_STRING
+from .utils._checks import _validate_inst_and_ica
+
+if TYPE_CHECKING:
+    from mne import BaseEpochs
+    from mne.io import BaseRaw
+    from mne.preprocessing import ICA
+
+
+def label_components(inst: BaseRaw | BaseEpochs, ica: ICA, method: str):
+    """Automatically label the ICA components with the selected method.
+
+    Parameters
+    ----------
+    inst : Raw | Epochs
+        The data instance used to fit the ICA instance.
+    ica : ICA
+        The fitted ICA instance.
+    method : str
+        The proposed method for labeling components. Must be one of:
+        ``'iclabel'``, ``'megnet'``.
+
+    Returns
+    -------
+    component_dict : dict
+        A dictionary with the following fields:
+
+        - ``'y_pred_proba'`` : array of shape (n_components,)
+              Estimated predicted probability of the output class
+              for each independent component.
+        - ``'labels'`` : list of shape (n_components,)
+              The corresponding string label of each class in ``'y_pred'``.
+
+    Notes
+    -----
+    Please refer to the following function for additional information on each
+    method:
+
+    - ``'iclabel'``: :func:`~mne_icalabel.iclabel.iclabel_label_components`
+    - ``'megnet'``: :func:`~mne_icalabel.megnet.megnet_label_components`
+    """
+    _validate_type(method, str, "method")
+    _check_option(
+        "method", method, [elt for elt in ICALABEL_METHODS if elt != "manual"]
+    )
+
+    _validate_inst_and_ica(inst, ica)
+    labels_pred_proba = ICALABEL_METHODS[method](inst, ica)  # type: ignore
+    labels_pred = np.argmax(labels_pred_proba, axis=1)
+    labels = [
+        ICALABEL_METHODS_NUMERICAL_TO_STRING[method][label] for label in labels_pred
+    ]
+    assert ica.n_components_ == labels_pred.size  # sanity-check
+    assert ica.n_components_ == labels_pred_proba.shape[0]  # sanity-check
+    y_pred_proba = labels_pred_proba[np.arange(ica.n_components_), labels_pred]
+
+    component_dict = {
+        "y_pred_proba": y_pred_proba,
+        "labels": labels,
+    }
+    return component_dict
