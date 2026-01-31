@@ -1,0 +1,88 @@
+[package]
+name = "petal-decomposition"
+version = "0.8.0"
+description = """
+Matrix decomposition algorithms including PCA (principal component analysis)
+and ICA (independent component analysis)"""
+documentation = "https://docs.rs/petal-decomposition"
+readme = "README.md"
+homepage = "https://github.com/petabi/petal-decomposition"
+repository = "https://github.com/petabi/petal-decomposition"
+license = "Apache-2.0"
+keywords = ["matrix", "decomposition", "pca", "ica", "dimensionality"]
+categories = ["mathematics", "science", "algorithms"]
+authors = ["Min Kim <msk@dolbo.net>"]
+edition = "2021"
+rust-version = "1.65"
+exclude = ["./github"]
+
+[badges]
+codecov = { repository = "petabi/petal-decomposition", service = "github" }
+
+[lints.clippy]
+pedantic = "warn"
+
+[package.metadata.docs.rs]
+no-default-features = true
+
+[features]
+default = []
+
+intel-mkl = ["intel-mkl-static"]
+netlib = ["netlib-static"]
+openblas = ["openblas-static"]
+
+intel-mkl-static = ["intel-mkl-src/mkl-static-lp64-seq"]
+intel-mkl-system = ["intel-mkl-src/mkl-dynamic-lp64-seq"]
+
+netlib-static = ["netlib-src/static"]
+netlib-system = ["netlib-src/system"]
+
+openblas-static = ["openblas-src/static"]
+openblas-system = ["openblas-src/system"]
+
+serialization = [
+    "serde",
+    "lair/serialization",
+    "ndarray/serde",
+    "rand/serde1",
+    "rand_pcg/serde1",
+]
+
+[dependencies]
+itertools = "0.13"
+lair = "0.7"
+lapack = "0.19"
+ndarray = "0.16.1"
+num-complex = "0.4"
+num-traits = "0.2.15"
+rand = "0.8"
+rand_distr = "0.4"
+rand_pcg = "0.3"
+serde = { version = "1", features = ["derive"], optional = true }
+thiserror = "1"
+
+[dependencies.intel-mkl-src]
+version = "0.8.1"
+default-features = false
+optional = true
+
+[dependencies.netlib-src]
+version = "0.8"
+default-features = false
+features = ["cblas"]
+optional = true
+
+[dependencies.openblas-src]
+version = "0.10.4"
+default-features = false
+features = ["cblas"]
+optional = true
+
+[dev-dependencies]
+approx = "0.5"
+ndarray = { version = "0.16", features = ["approx"] }
+serde_json = "1"
+
+[packages.metadata.docs.rs]
+features = ["serialization"]

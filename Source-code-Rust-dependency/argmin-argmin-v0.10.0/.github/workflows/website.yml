@@ -1,0 +1,26 @@
+name: Website
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-website:
+    name: Build website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build website 
+        uses: shalzz/zola-deploy-action@master
+        env:
+          BUILD_DIR: media/website/
+          BUILD_ONLY: true
+          BUILD_FLAGS: --drafts
+          CHECK_LINKS: true

@@ -1,0 +1,6 @@
+.*.swp
+Cargo.lock
+target/
+target/*
+*.log
+justfile

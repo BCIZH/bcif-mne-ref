@@ -1,0 +1,16 @@
+[package]
+name = "suitesparse_camd_sys"
+version = "0.1.1"
+authors = ["Vincent Barrielle <vincent.barrielle@m4x.org>"]
+description = "Raw bindings to SuiteSparse's CAMD algorithm"
+build = "build.rs"
+links = "camd"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+static = ["dep:suitesparse-src", "suitesparse-src?/camd"]
+
+[dependencies]
+suitesparse-src = { version = "0.1.0", path = "../suitesparse-src", optional = true }
